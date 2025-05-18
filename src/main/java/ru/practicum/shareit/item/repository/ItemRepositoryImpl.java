@@ -24,10 +24,11 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public List<Item> findByText(String text) {
+        String s = text.toLowerCase();
         return items.values().stream()
                 .filter(i -> (i.getAvailable() &&
-                        (i.getName().toLowerCase().contains(text.toLowerCase()) ||
-                                i.getDescription().toLowerCase().contains(text.toLowerCase()))))
+                        (i.getName().toLowerCase().contains(s) ||
+                                i.getDescription().toLowerCase().contains(s))))
                 .collect(Collectors.toList());
     }
 
