@@ -1,6 +1,5 @@
 package ru.practicum.shareit.exception;
 
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,6 +30,12 @@ public class ErrorHandler {
                 .body("{\"error\": \"" + ex.getMessage() + "\"}");
     }
 
+    @ExceptionHandler(NotFoundCustomException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNotFound(NotFoundCustomException ex) {
+        return new ErrorResponse("error", ex.getMessage(), List.of());
+    }
+
     @ExceptionHandler(ServerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorResponse> handleServerException(ServerException e) {
@@ -38,5 +43,4 @@ public class ErrorHandler {
         ErrorResponse errorResponse = new ErrorResponse("error", "Internal server error", List.of(e.getMessage()));
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-
 }

@@ -1,5 +1,7 @@
 package ru.practicum.shareit.user.service;
 
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,16 +16,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-
-    @Autowired
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-    }
 
     @Override
     public List<UserDto> getAll() {
@@ -50,6 +47,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(userRepository.save(user));
     }
 
+    @Transactional
     @Override
     public UserDto update(long id, UserDto userDto) {
         log.debug("Request PATCH to /users, with id = {}", id);
@@ -57,7 +55,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() ->
                         new NotFoundException("User with id = " + id + " not found"));
         userDto.setId(id);
-        return userMapper.toDto(userRepository.update(userDto, user));
+        return userMapper.toDto(update(userDto, user));
     }
 
     @Override
@@ -70,5 +68,15 @@ public class UserServiceImpl implements UserService {
     public void deleteAll() {
         log.debug("Request DELETE to /users)");
         userRepository.deleteAll();
+    }
+
+    private User update(UserDto userDto, User user) {
+        if (userDto.getName() != null && !userDto.getName().isBlank()) {
+            user.setName(userDto.getName());
+        }
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
+            user.setEmail(userDto.getEmail());
+        }
+        return user;
     }
 }
