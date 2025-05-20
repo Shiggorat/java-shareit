@@ -6,12 +6,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +45,9 @@ public class UserServiceImpl implements UserService {
     public UserDto create(UserDto userDto) {
         log.debug("Request POST to /users, with id = {}, name = {}, email = {}",
                 userDto.getId(), userDto.getName(), userDto.getEmail());
+        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+            throw new ValidateException( "Email already exists");
+        }
         User user = userMapper.fromDto(userDto);
         return userMapper.toDto(userRepository.save(user));
     }
@@ -54,6 +59,13 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
                         new NotFoundException("User with id = " + id + " not found"));
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
+            Optional<User> userWithSameEmail = userRepository.findByEmail(userDto.getEmail());
+            if (userWithSameEmail.isPresent() && userWithSameEmail.get().getId() != id) {
+                throw new ValidateException("Email already exists");
+            }
+            user.setEmail(userDto.getEmail());
+        }
         userDto.setId(id);
         return userMapper.toDto(update(userDto, user));
     }
