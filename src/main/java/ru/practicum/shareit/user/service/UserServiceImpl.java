@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
         log.debug("Request POST to /users, with id = {}, name = {}, email = {}",
                 userDto.getId(), userDto.getName(), userDto.getEmail());
         if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new ValidateException( "Email already exists");
+            throw new ValidateException("Email already exists");
         }
         User user = userMapper.fromDto(userDto);
         return userMapper.toDto(userRepository.save(user));
