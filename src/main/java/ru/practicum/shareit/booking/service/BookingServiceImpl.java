@@ -74,7 +74,7 @@ public class BookingServiceImpl implements BookingService {
         log.info("User {} is attempting to update booking {}--------------------------", ownerId, id);
         if (!booking.getItem().getOwner().getId().equals(ownerId)) {
             log.info("User {} is not owner of item {}-----------------------------", ownerId, booking.getItem().getId());
-            throw new NotFoundCustomException ("Not owner of this item");
+            throw new NotFoundCustomException("Not owner of this item");
         }
 
         Status status;
@@ -104,7 +104,7 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getBooker().getId() == userId || booking.getItem().getOwner().getId() == userId) {
             return bookingMapper.toOutputDto(booking);
         } else {
-            throw new NotFoundException ("Not owner or booker of this item");
+            throw new NotFoundException("Not owner or booker of this item");
         }
     }
 
