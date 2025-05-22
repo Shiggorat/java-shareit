@@ -1,6 +1,6 @@
 package ru.practicum.shareit.user.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +25,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDto> getAll() {
         log.debug("Request GET to /users");
         return userRepository.findAll()
@@ -34,6 +35,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDto getById(long id) {
         log.debug("Request GET to /users/{}", id);
         return userRepository.findById(id)
@@ -42,6 +44,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto create(UserDto userDto) {
         log.debug("Request POST to /users, with id = {}, name = {}, email = {}",
                 userDto.getId(), userDto.getName(), userDto.getEmail());
@@ -52,8 +55,8 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(userRepository.save(user));
     }
 
-    @Transactional
     @Override
+    @Transactional
     public UserDto update(long id, UserDto userDto) {
         log.debug("Request PATCH to /users, with id = {}", id);
         User user = userRepository.findById(id)
@@ -71,12 +74,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteById(long id) {
         log.debug("Request DELETE to /users/{}", id);
         userRepository.deleteById(id);
     }
 
     @Override
+    @Transactional
     public void deleteAll() {
         log.debug("Request DELETE to /users)");
         userRepository.deleteAll();

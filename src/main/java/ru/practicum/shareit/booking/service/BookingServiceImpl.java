@@ -17,7 +17,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +34,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper bookingMapper;
 
     @Override
+    @Transactional
     public BookingDtoOutput create(long userId, BookingDtoInput bookingDto) {
         if (!bookingDto.getStart().isBefore(bookingDto.getEnd())) {
             throw new ValidateException("Item is not available in this time");
@@ -93,6 +94,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookingDtoOutput getById(long userId, long id) {
         Booking booking = bookingRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("Booking with this id not found")
@@ -109,6 +111,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingDtoOutput> getAllByUser(long userId, State state) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User with this id is not found");
@@ -118,6 +121,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingDtoOutput> getAllByOwner(long ownerId, State state) {
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("User with this id is not found");

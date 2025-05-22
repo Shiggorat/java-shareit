@@ -1,6 +1,6 @@
 package ru.practicum.shareit.item.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -48,6 +48,7 @@ public class ItemServiceImpl implements ItemService {
     private final BookingMapper bookingMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemDtoBookingAndComments> getAll(long ownerId) {
         log.debug("Request GET to /items");
         userRepository.findById(ownerId)
@@ -76,6 +77,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ItemDtoBookingAndComments  getById(long ownerId, long id) {
         log.info("Request GET by id to /items/{}", id);
         userRepository.findById(ownerId)
@@ -89,6 +91,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemDto> getByText(String text) {
         log.info("Request GET by text to /items/search?text={}", text);
         return itemRepository.findByText(text)
@@ -98,6 +101,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDto create(long ownerId, ItemDtoInput itemDto) {
         log.debug("Request POST to /items, with sharerId = {}, id = {}, name = {}, description = {}, isAvailable = {}",
                 ownerId, itemDto.getId(), itemDto.getName(), itemDto.getDescription(), itemDto.getAvailable());
@@ -130,18 +134,21 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public void deleteById(long ownerId, long id) {
         log.debug("Request DELETE to /items/{}", id);
         itemRepository.deleteById(id);
     }
 
     @Override
+    @Transactional
     public void deleteAll() {
         log.debug("Request DELETE to /items)");
         itemRepository.deleteAll();
     }
 
     @Override
+    @Transactional
     public CommentDto createComment(long userId, long itemId, CommentDto commentDto) {
         log.debug("Request POST to /items/{}/comment", itemId);
         User author = userRepository.findById(userId)
