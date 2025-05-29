@@ -4,12 +4,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.booking.BookingClient;
 import ru.practicum.shareit.item.ItemClient;
 import ru.practicum.shareit.request.ItemRequestClient;
 import ru.practicum.shareit.user.UserClient;
+
+import java.util.function.Supplier;
 
 @Configuration
 public class WebClientConfig {
@@ -26,7 +29,6 @@ public class WebClientConfig {
     @Value("${api-prefix-4}")
     String apiPrefix4;
 
-
     @Value("${shareit-server.url}")
     String serverUrl;
 
@@ -34,7 +36,8 @@ public class WebClientConfig {
     public BookingClient bookingClient(RestTemplateBuilder restTemplateBuilder) {
         var restTemplate = restTemplateBuilder
                 .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + apiPrefix1))
-                .requestFactory(HttpComponentsClientHttpRequestFactory::new).build();
+                .requestFactory((Supplier<ClientHttpRequestFactory>) HttpComponentsClientHttpRequestFactory::new)
+                .build();
         return new BookingClient(restTemplate);
     }
 
@@ -42,7 +45,8 @@ public class WebClientConfig {
     public ItemClient itemClient(RestTemplateBuilder restTemplateBuilder) {
         var restTemplate = restTemplateBuilder
                 .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + apiPrefix2))
-                .requestFactory(HttpComponentsClientHttpRequestFactory::new).build();
+                .requestFactory((Supplier<ClientHttpRequestFactory>) HttpComponentsClientHttpRequestFactory::new)
+                .build();
         return new ItemClient(restTemplate);
     }
 
@@ -50,7 +54,8 @@ public class WebClientConfig {
     public ItemRequestClient itemRequestClient(RestTemplateBuilder restTemplateBuilder) {
         var restTemplate = restTemplateBuilder
                 .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + apiPrefix3))
-                .requestFactory(HttpComponentsClientHttpRequestFactory::new).build();
+                .requestFactory((Supplier<ClientHttpRequestFactory>) HttpComponentsClientHttpRequestFactory::new)
+                .build();
         return new ItemRequestClient(restTemplate);
     }
 
@@ -58,7 +63,8 @@ public class WebClientConfig {
     public UserClient userClient(RestTemplateBuilder restTemplateBuilder) {
         var restTemplate = restTemplateBuilder
                 .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + apiPrefix4))
-                .requestFactory(HttpComponentsClientHttpRequestFactory::new).build();
+                .requestFactory((Supplier<ClientHttpRequestFactory>) HttpComponentsClientHttpRequestFactory::new)
+                .build();
         return new UserClient(restTemplate);
     }
 }

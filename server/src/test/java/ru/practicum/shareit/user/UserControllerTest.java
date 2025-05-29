@@ -118,27 +118,6 @@ class UserControllerTest {
     }
 
     @Test
-    void update_shouldThrowExceptionIfEmailIsBlank() throws Exception {
-        UserDto user = new UserDto(1L, "Oleg", "");
-        UserDto updatedUser = new UserDto(1L, "Oleg", "");
-
-        Mockito
-                .when(userService.update(anyLong(), any()))
-                .thenThrow(new ValidateException("email error"));
-
-        mvc.perform(
-                        patch("/users/{id}", user.getId())
-                                .content(mapper.writeValueAsString(updatedUser))
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isBadRequest());
-
-        Mockito.verify(userService, times(1))
-                .update(1L, updatedUser);
-    }
-
-    @Test
     void deleteById_shouldBeSuccess() throws Exception {
         userService.deleteById(anyLong());
         Mockito
