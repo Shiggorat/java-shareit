@@ -140,23 +140,23 @@ private List<Booking> sortByState(State state, long id, String person) {
                 break;
             case CURRENT:
                 bookings = bookingRepository.findBookingsByItem_Owner_IdAndStartBeforeAndEndAfter(id,
-                        sort, LocalDateTime.now(), LocalDateTime.now());
+                        LocalDateTime.now(), LocalDateTime.now(), sort);
                 break;
             case PAST:
                 bookings = bookingRepository.findBookingsByItem_Owner_IdAndEndBefore(id,
-                        sort, LocalDateTime.now());
+                        LocalDateTime.now(), sort);
                 break;
             case FUTURE:
                 bookings = bookingRepository.findBookingsByItem_Owner_IdAndStartAfter(id,
-                        sort, LocalDateTime.now());
+                        LocalDateTime.now(), sort);
                 break;
             case WAITING:
                 bookings = bookingRepository.findBookingsByItem_Owner_IdAndStatus(id,
-                        sort, Status.WAITING);
+                        Status.WAITING, sort);
                 break;
             case REJECTED:
                 bookings = bookingRepository.findBookingsByItem_Owner_IdAndStatus(id,
-                        sort, Status.REJECTED);
+                        Status.REJECTED, sort);
                 break;
             default:
                 throw new ValidateException("Nonexistent state");
@@ -168,23 +168,23 @@ private List<Booking> sortByState(State state, long id, String person) {
                 break;
             case CURRENT:
                 bookings = bookingRepository.findBookingsByBooker_IdAndStartBeforeAndEndAfter(id,
-                        sort, LocalDateTime.now(), LocalDateTime.now());
+                        LocalDateTime.now(), LocalDateTime.now(), sort);
                 break;
             case PAST:
                 bookings = bookingRepository.findBookingsByBooker_IdAndEndBefore(id,
-                        sort, LocalDateTime.now());
+                        LocalDateTime.now(), sort);
                 break;
             case FUTURE:
                 bookings = bookingRepository.findBookingsByBooker_IdAndStartAfter(id,
-                        sort, LocalDateTime.now());
+                        LocalDateTime.now(), sort);
                 break;
             case WAITING:
                 bookings = bookingRepository.findBookingsByBooker_IdAndStatus(id,
-                        sort, Status.WAITING);
+                        Status.WAITING, sort);
                 break;
             case REJECTED:
                 bookings = bookingRepository.findBookingsByBooker_IdAndStatus(id,
-                        sort, Status.REJECTED);
+                        Status.REJECTED, sort);
                 break;
             default:
                 throw new ValidateException("Nonexistent state");

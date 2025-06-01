@@ -16,25 +16,24 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findBookingsByBooker_Id(long bookerId, Sort sort);
 
     List<Booking> findBookingsByBooker_IdAndStartBeforeAndEndAfter(long bookerId,
-                                                                   Sort sort, LocalDateTime start, LocalDateTime end);
+                                                                   LocalDateTime start, LocalDateTime end, Sort sort);
 
-    List<Booking> findBookingsByBooker_IdAndEndBefore(long bookerId, Sort sort, LocalDateTime end);
+    List<Booking> findBookingsByBooker_IdAndEndBefore(long bookerId, LocalDateTime end, Sort sort);
 
-    List<Booking> findBookingsByBooker_IdAndStartAfter(long bookerId, Sort sort, LocalDateTime start);
+    List<Booking> findBookingsByBooker_IdAndStartAfter(long bookerId, LocalDateTime start, Sort sort);
 
-    List<Booking> findBookingsByBooker_IdAndStatus(long bookerId, Sort sort, Status status);
+    List<Booking> findBookingsByBooker_IdAndStatus(long bookerId, Status status, Sort sort);
 
     List<Booking> findBookingsByItem_Owner_Id(long ownerId, Sort sort);
 
-    List<Booking> findBookingsByItem_Owner_IdAndStartBeforeAndEndAfter(long ownerId,
-                                                                       Sort sort, LocalDateTime start,
-                                                                       LocalDateTime end);
+    List<Booking> findBookingsByItem_Owner_IdAndStartBeforeAndEndAfter(long ownerId, LocalDateTime start,
+                                                                       LocalDateTime end, Sort sort);
 
-    List<Booking> findBookingsByItem_Owner_IdAndEndBefore(long ownerId, Sort sort, LocalDateTime end);
+    List<Booking> findBookingsByItem_Owner_IdAndEndBefore(long ownerId, LocalDateTime end, Sort sort);
 
-    List<Booking> findBookingsByItem_Owner_IdAndStartAfter(long ownerId, Sort sort, LocalDateTime start);
+    List<Booking> findBookingsByItem_Owner_IdAndStartAfter(long ownerId, LocalDateTime start, Sort sort);
 
-    List<Booking> findBookingsByItem_Owner_IdAndStatus(long ownerId, Sort sort, Status status);
+    List<Booking> findBookingsByItem_Owner_IdAndStatus(long ownerId, Status status, Sort sort);
 
     List<Booking> findBookingsByBooker_IdAndItem_IdAndEndIsBefore(long bookerId, long itemId,
                                                                   LocalDateTime localDateTime);

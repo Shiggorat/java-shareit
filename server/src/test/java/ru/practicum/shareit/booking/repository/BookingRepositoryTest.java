@@ -60,29 +60,29 @@ public class BookingRepositoryTest {
     @Test
     void findBookingsByBooker_IdAndEndBefore_ShouldReturnPastBookings() {
         List<Booking> bookings = bookingRepository.findBookingsByBooker_IdAndEndBefore(
-                user1.getId(), Sort.by(Sort.Direction.DESC, "end"), LocalDateTime.now());
+                user1.getId(), LocalDateTime.now(), Sort.by(Sort.Direction.DESC, "end"));
         assertThat(bookings).hasSize(2); // booking1 и booking3
     }
 
     @Test
     void findBookingsByBooker_IdAndStartAfter_ShouldReturnFutureBookings() {
         List<Booking> bookings = bookingRepository.findBookingsByBooker_IdAndStartAfter(
-                user1.getId(), Sort.by(Sort.Direction.ASC, "start"), LocalDateTime.now());
+                user1.getId(), LocalDateTime.now(), Sort.by(Sort.Direction.ASC, "start"));
         assertThat(bookings).hasSize(1); // booking2
     }
 
     @Test
     void findBookingsByBooker_IdAndStatus_ShouldReturnStatusFiltered() {
         List<Booking> waitingBookings = bookingRepository.findBookingsByBooker_IdAndStatus(
-                user1.getId(), Sort.by(Sort.Direction.DESC, "start"), Status.WAITING);
+                user1.getId(), Status.WAITING, Sort.by(Sort.Direction.DESC, "start"));
         assertThat(waitingBookings).hasSize(1);
 
         List<Booking> rejectedBookings = bookingRepository.findBookingsByBooker_IdAndStatus(
-                user1.getId(), Sort.by(Sort.Direction.DESC, "start"), Status.REJECTED);
+                user1.getId(), Status.REJECTED, Sort.by(Sort.Direction.DESC, "start"));
         assertThat(rejectedBookings).hasSize(1);
 
         List<Booking> approvedBookings = bookingRepository.findBookingsByBooker_IdAndStatus(
-                user1.getId(), Sort.by(Sort.Direction.DESC, "start"), Status.APPROVED);
+                user1.getId(), Status.APPROVED, Sort.by(Sort.Direction.DESC, "start"));
         assertThat(approvedBookings).hasSize(1);
     }
 
@@ -95,14 +95,14 @@ public class BookingRepositoryTest {
     @Test
     void findBookingsByItem_Owner_IdAndEndBefore_ShouldReturnPastOwnerItems() {
         List<Booking> bookings = bookingRepository.findBookingsByItem_Owner_IdAndEndBefore(
-                user2.getId(), Sort.by(Sort.Direction.DESC, "end"), LocalDateTime.now());
+                user2.getId(), LocalDateTime.now(), Sort.by(Sort.Direction.DESC, "end"));
         assertThat(bookings).hasSize(2); // бронирования с end в прошлом (booking1 и booking3)
     }
 
     @Test
     void findBookingsByItem_Owner_IdAndStartAfter_ShouldReturnUpcomingOwnerItems() {
         List<Booking> bookings = bookingRepository.findBookingsByItem_Owner_IdAndStartAfter(
-                user2.getId(), Sort.by(Sort.Direction.ASC, "start"), LocalDateTime.now());
+                user2.getId(), LocalDateTime.now(), Sort.by(Sort.Direction.ASC, "start"));
         assertThat(bookings).hasSize(1); // бронирование с start в будущем (booking2)
     }
 }

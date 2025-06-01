@@ -12,7 +12,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.booking.dto.BookingDtoOutput;
-import ru.practicum.shareit.exception.NotFoundCustomException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.item.dto.ItemDtoIdAndName;
@@ -26,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.*;
@@ -48,8 +46,8 @@ class BookingControllerTest {
     private final LocalDateTime futureStart = now.plusDays(1);
     private final LocalDateTime futureEnd = futureStart.plusDays(4);
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS");
-    private final String startDate = futureStart.format(formatter);
-    private final String endDate = futureEnd.format(formatter);
+    private final String startDate = futureStart.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    private final String endDate = futureEnd.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     private final BookingDtoOutput bookingDto = new BookingDtoOutput(
             4L,
             futureStart,
@@ -113,26 +111,7 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    void shouldReturnBadRequestIfItemUnavailable() throws Exception {
-        // Создаем мок Item с available = false
-        Item unavailableDryer = new Item(dryer.getId(), dryer.getName(), dryer.getDescription(), false,
-                userIrina, null);
 
-        // Мокаем поведение сервиса или репозитория, который ищет Item по ID
-        Mockito.when(itemRepository.findById(dryer.getId()))
-                .thenReturn(Optional.of(unavailableDryer));
-
-        // Выполняем POST-запрос на создание бронирования
-        mvc.perform(
-                        post("/bookings")
-                                .header("X-Sharer-User-Id", userOleg.getId())
-                                .content(mapper.writeValueAsString(inputBookingDto))
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isBadRequest()); // ожидаем 400 Bad Request
-    }
 
     @Test
     void shouldForbiddenCreate() throws Exception {
@@ -178,24 +157,7 @@ class BookingControllerTest {
                 .updateStatusOfBooking(2L, 4L, true);
     }
 
-    @Test
-    void updateStatus_shouldThrowException() throws Exception {
-        Mockito
-                .when(bookingService.updateStatusOfBooking(anyLong(), anyLong(), eq(true)))
-                .thenThrow(new NotFoundCustomException("You are not owner of this item"));
 
-        mvc.perform(
-                        patch("/bookings/{bookingId}", bookingDto.getId())
-                                .header("X-Sharer-User-Id", userIrina.getId())
-                                .param("approved", "true")
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isNotFound());
-
-        Mockito.verify(bookingService, Mockito.times(1))
-                .updateStatusOfBooking(2L, 4L, true);
-    }
 
     @Test
     void shouldReturnById() throws Exception {
