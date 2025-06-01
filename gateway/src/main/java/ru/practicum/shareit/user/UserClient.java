@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.shareit.client.BaseClient;
@@ -9,7 +8,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 public class UserClient extends BaseClient {
 
-    @Autowired
     public UserClient(RestTemplate builder) {
         super(builder);
     }

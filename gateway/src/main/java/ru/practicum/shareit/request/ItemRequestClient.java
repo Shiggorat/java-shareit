@@ -1,6 +1,5 @@
 package ru.practicum.shareit.request;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.shareit.client.BaseClient;
@@ -11,7 +10,6 @@ import java.util.Map;
 
 public class ItemRequestClient extends BaseClient {
 
-    @Autowired
     public ItemRequestClient(RestTemplate builder) {
         super(builder);
     }

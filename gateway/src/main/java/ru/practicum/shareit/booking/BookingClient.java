@@ -1,6 +1,5 @@
 package ru.practicum.shareit.booking;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import ru.practicum.shareit.booking.dto.BookItemRequestDto;
@@ -12,7 +11,6 @@ import java.util.Map;
 
 public class BookingClient extends BaseClient {
 
-    @Autowired
     public BookingClient(RestTemplate builder) {
         super(builder);
     }
