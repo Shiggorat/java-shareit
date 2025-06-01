@@ -1,173 +1,546 @@
 package ru.practicum.shareit.booking.service;
 
-import org.junit.jupiter.api.BeforeEach;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlGroup;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.State;
 import ru.practicum.shareit.booking.Status;
 import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.booking.dto.BookingDtoOutput;
-import ru.practicum.shareit.booking.dto.BookingMapper;
-import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.NotFoundCustomException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
-import ru.practicum.shareit.item.dto.ItemDtoIdAndName;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.dto.UserDtoIdAndName;
-import ru.practicum.shareit.user.repository.UserRepository;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.List;
 
-@ExtendWith(MockitoExtension.class)
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
+
+@Transactional
+@SpringBootTest
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class BookingServiceImplTest {
 
-    @Mock
-    private BookingRepository bookingRepository;
+    private final BookingService bookingService;
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private ItemRepository itemRepository;
-
-    @Mock
-    private BookingMapper bookingMapper;
-
-    @InjectMocks
-    private BookingServiceImpl bookingService;
-
-    private User user;
-    private User owner;
-    private Item item;
-    private Booking booking;
-    private BookingDtoInput inputDto;
-    private BookingDtoOutput outputDto;
-
-    @BeforeEach
-    void setUp() {
-        user = new User();
-        user.setId(1L);
-
-        owner = new User();
-        owner.setId(2L);
-
-        item = new Item();
-        item.setId(10L);
-        item.setAvailable(true);
-        item.setOwner(owner);
-
-        booking = new Booking();
-        booking.setId(100L);
-        booking.setItem(item);
-        booking.setBooker(user);
-        booking.setStatus(Status.WAITING);
-
-        inputDto = createSampleBookingDtoInput();
-        inputDto.setItemId(item.getId());
-        inputDto.setStart(LocalDateTime.now().plusDays(1));
-        inputDto.setEnd(LocalDateTime.now().plusDays(2));
-
-        outputDto = createSampleBookingDtoOutput(123L);
-    }
-
-    private BookingDtoInput createSampleBookingDtoInput() {
-        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        return new BookingDtoInput(
-                now.plusDays(1),
-                now.plusDays(2),
-                123L // itemId
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before2.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldCreate() {
+        BookingDtoInput inputBookingDto = new BookingDtoInput(
+                LocalDateTime.now().plusMonths(1),
+                LocalDateTime.now().plusMonths(2),
+                5L
         );
+
+        BookingDtoOutput newBookingDto = bookingService.create(1L, inputBookingDto);
+        assertEquals(newBookingDto.getId(), 1L);
+        assertEquals(newBookingDto.getStatus(), Status.WAITING);
+        assertEquals(newBookingDto.getId(), 1L);
+        assertEquals(newBookingDto.getItem().getId(), 5L);
+        assertEquals(newBookingDto.getBooker().getId(), 1L);
     }
 
-    private BookingDtoOutput createSampleBookingDtoOutput(Long id) {
-        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        ItemDtoIdAndName item = new ItemDtoIdAndName(123L, "Item Name");
-        UserDtoIdAndName booker = new UserDtoIdAndName(1L, "User Name");
-        return new BookingDtoOutput(
-                id,
-                now.plusDays(1),
-                now.plusDays(2),
-                item,
-                booker,
-                Status.WAITING
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-without-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldThrowExceptionIfItemIsUnavailable() {
+        BookingDtoInput newBookingDto = new BookingDtoInput(
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(4),
+                3L
+        );
+
+        assertThrows(
+                NotFoundException.class,
+                () -> bookingService.create(1L, newBookingDto),
+                "This item is not available."
         );
     }
 
     @Test
-    void create_ShouldCreateBooking_WhenDataIsValid() {
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
-        when(bookingMapper.fromInputDto(any(), any(), any())).thenReturn(booking);
-        when(bookingRepository.save(any())).thenReturn(booking);
-        when(bookingMapper.toOutputDto(any())).thenReturn(outputDto);
+    @SqlGroup({
+            @Sql(value = {"before2.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldThrowExceptionIfUserNotExist() {
+        long userId = 99L;
+        BookingDtoInput newBookingDto = new BookingDtoInput(
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(4),
+                3L
+        );
 
-        BookingDtoOutput result = bookingService.create(user.getId(), inputDto);
-
-        assertNotNull(result);
-        verify(userRepository).findById(user.getId());
-        verify(itemRepository).findById(inputDto.getItemId());
-        verify(bookingMapper).fromInputDto(any(), any(), any());
-        verify(bookingRepository).save(any());
-        verify(bookingMapper).toOutputDto(any());
+        assertThrows(
+                NotFoundException.class,
+                () -> bookingService.create(userId, newBookingDto),
+                "This user is not exist.");
     }
 
     @Test
-    void create_ShouldThrowValidateException_WhenStartAfterEnd() {
-        inputDto.setStart(LocalDateTime.now().plusDays(3));
-        inputDto.setEnd(LocalDateTime.now().plusDays(2));
+    @SqlGroup({
+            @Sql(value = {"before2.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldThrowExceptionIfItemNotExist() {
+        BookingDtoInput newBookingDto = new BookingDtoInput(
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(4),
+                99L
+        );
 
-        assertThrows(ValidateException.class, () ->
-                bookingService.create(user.getId(), inputDto)
+        assertThrows(
+                NotFoundException.class,
+                () -> bookingService.create(1L, newBookingDto),
+                "This item is not exist."
         );
     }
 
     @Test
-    void create_ShouldThrowNotFoundException_WhenUserNotFound() {
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+    @SqlGroup({
+            @Sql(value = {"before2.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldThrowExceptionIfBookerIsEqualsOwner() {
+        BookingDtoInput newBookingDto = new BookingDtoInput(
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(4),
+                3L
+        );
 
-        assertThrows(NotFoundException.class, () ->
-                bookingService.create(user.getId(), inputDto)
+        assertThrows(
+                NotFoundException.class,
+                () -> bookingService.create(1L, newBookingDto),
+                "Owner cannot book his item"
         );
     }
 
     @Test
-    void create_ShouldThrowNotFoundException_WhenItemNotFound() {
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
-        when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
+    @SqlGroup({
+            @Sql(value = {"before2.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldThrowExceptionIfTimeCollapse() {
+        BookingDtoInput newBookingDto = new BookingDtoInput(
+                LocalDateTime.now().plusDays(4),
+                LocalDateTime.now(),
+                3L
+        );
 
-        assertThrows(NotFoundException.class, () ->
-                bookingService.create(user.getId(), inputDto)
+        assertThrows(
+                ValidateException.class,
+                () -> bookingService.create(1L, newBookingDto),
+                "You are not in Nolan movie :)"
         );
     }
 
     @Test
-    void getByID_ShouldReturnBooking_WhenUserIsBookerOrOwner() {
-        long userID = user.getId();
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldReturnById() {
+        BookingDtoOutput actual = bookingService.getById(1L, 7L);
 
-        Booking existingBooking = new Booking();
-        existingBooking.setId(200L);
-        existingBooking.setItem(item);
-        existingBooking.setBooker(user);
+        assertThat(actual).isNotNull();
+        assertEquals(7L, actual.getId());
+        assertEquals(LocalDateTime.of(2023, 1, 20, 12, 0), actual.getStart());
+        assertEquals(LocalDateTime.of(2023, 2, 15, 12, 0), actual.getEnd());
+        assertEquals(3L, actual.getItem().getId());
+        assertEquals(1L, actual.getBooker().getId());
+    }
 
-        when(bookingRepository.findById(existingBooking.getId()))
-                .thenReturn(Optional.of(existingBooking));
-        when(userRepository.findById(userID))
-                .thenReturn(Optional.of(user));
-        when(bookingMapper.toOutputDto(existingBooking))
-                .thenReturn(outputDto);
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldThrowExceptionIfWrongUserId() {
+        long id = 99L;
 
-        var result = bookingService.getById(userID, existingBooking.getId());
+        assertThrows(NotFoundException.class,
+                () -> bookingService.getById(id, 7L));
+    }
 
-        assertNotNull(result);
-        verify(bookingMapper).toOutputDto(existingBooking);
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldReturnById_IfUserIsBooker() {
+        BookingDtoOutput actual = bookingService.getById(1L, 7L);
+
+        assertThat(actual).isNotNull();
+        assertEquals(7L, actual.getId());
+        assertEquals(LocalDateTime.of(2023, 1, 20, 12, 0), actual.getStart());
+        assertEquals(LocalDateTime.of(2023, 2, 15, 12, 0), actual.getEnd());
+        assertEquals(3L, actual.getItem().getId());
+        assertEquals(1L, actual.getBooker().getId());
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-without-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldThrowExceptionIfWrongId() {
+        long bookingId = 99L;
+
+        assertThrows(
+                NotFoundException.class,
+                () -> bookingService.getById(1L, bookingId),
+                "Booking with this id not exist."
+        );
+    }
+
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before2.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void getByUser_ShouldThrowExceptionIfWrongUserId() {
+        long id = 99L;
+
+        assertThrows(
+                NotFoundException.class,
+                () -> bookingService.getAllByUser(id, State.ALL)
+        );
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByUserIfStateIsWaiting() {
+        List<BookingDtoOutput> actual = bookingService.getAllByUser(1L, State.WAITING);
+
+        assertEquals(actual.get(0).getId(), 7L);
+        assertEquals(actual.get(0).getStatus(), Status.WAITING);
+        assertEquals(actual.get(0).getItem().getId(), 3L);
+        assertEquals(actual.get(0).getBooker().getId(), 1L);
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-rejected-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByUserIfStateIsRejected() {
+        List<BookingDtoOutput> actual = bookingService.getAllByUser(1L, State.REJECTED);
+
+        assertEquals(actual.get(0).getId(), 7L);
+        assertEquals(actual.get(0).getStatus(), Status.REJECTED);
+        assertEquals(actual.get(0).getItem().getId(), 3L);
+        assertEquals(actual.get(0).getBooker().getId(), 1L);
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-past-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByUserIfStateIsPast() {
+        List<BookingDtoOutput> actual = bookingService.getAllByUser(1L, State.PAST);
+
+        assertEquals(actual.get(0).getId(), 7L);
+        assertEquals(actual.get(0).getStatus(), Status.WAITING);
+        assertEquals(actual.get(0).getItem().getId(), 3L);
+        assertEquals(actual.get(0).getBooker().getId(), 1L);
+        assertTrue(actual.get(0).getStart().isBefore(LocalDateTime.now()));
+        assertTrue(actual.get(0).getEnd().isBefore(LocalDateTime.now()));
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByUserIfStateIsAll() {
+        List<BookingDtoOutput> actual = bookingService.getAllByUser(1L, State.ALL);
+
+        assertThat(actual).isNotNull();
+        assertEquals(7L, actual.get(0).getId());
+        assertEquals(LocalDateTime.of(2023, 1, 20, 12, 0), actual.get(0).getStart());
+        assertEquals(LocalDateTime.of(2023, 2, 15, 12, 0), actual.get(0).getEnd());
+        assertEquals(3L, actual.get(0).getItem().getId());
+        assertEquals(1L, actual.get(0).getBooker().getId());
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByOwnerIfStateIsWaiting() {
+        List<BookingDtoOutput> actual = bookingService.getAllByOwner(1L, State.WAITING);
+
+        assertEquals(actual.get(0).getId(), 7L);
+        assertEquals(actual.get(0).getStatus(), Status.WAITING);
+        assertEquals(actual.get(0).getItem().getId(), 3L);
+        assertEquals(actual.get(0).getBooker().getId(), 1L);
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-rejected-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByOwnerIfStateIsRejected() {
+        List<BookingDtoOutput> actual = bookingService.getAllByOwner(1L, State.REJECTED);
+
+        assertEquals(actual.get(0).getId(), 7L);
+        assertEquals(actual.get(0).getStatus(), Status.REJECTED);
+        assertEquals(actual.get(0).getItem().getId(), 3L);
+        assertEquals(actual.get(0).getBooker().getId(), 1L);
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-past-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByOwnerIfStateIsPast() {
+        List<BookingDtoOutput> actual = bookingService.getAllByOwner(1L, State.PAST);
+
+        assertEquals(actual.get(0).getId(), 7L);
+        assertEquals(actual.get(0).getStatus(), Status.WAITING);
+        assertEquals(actual.get(0).getItem().getId(), 3L);
+        assertEquals(actual.get(0).getBooker().getId(), 1L);
+        assertTrue(actual.get(0).getStart().isBefore(LocalDateTime.now()));
+        assertTrue(actual.get(0).getEnd().isBefore(LocalDateTime.now()));
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByOwnerIfStateIsAll() {
+        List<BookingDtoOutput> actual = bookingService.getAllByOwner(1L, State.ALL);
+
+        assertThat(actual).isNotNull();
+        assertEquals(7L, actual.get(0).getId());
+        assertEquals(LocalDateTime.of(2023, 1, 20, 12, 0), actual.get(0).getStart());
+        assertEquals(LocalDateTime.of(2023, 2, 15, 12, 0), actual.get(0).getEnd());
+        assertEquals(3L, actual.get(0).getItem().getId());
+        assertEquals(1L, actual.get(0).getBooker().getId());
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldUpdateStatus() {
+        BookingDtoOutput actual = bookingService.updateStatusOfBooking(1L, 7L, true);
+
+        assertEquals(actual.getStatus(), Status.APPROVED);
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void updateStatus_ShouldThrowExceptionIfWrongId() {
+        long bookingId = 99L;
+
+        assertThrows(
+                NotFoundCustomException.class,
+                () -> bookingService.updateStatusOfBooking(1L, bookingId, true)
+        );
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-one-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void updateStatus_ShouldThrowExceptionIfUserIsNotOwner() {
+        long id = 99L;
+
+        assertThrows(
+                NotFoundCustomException.class,
+                () -> bookingService.updateStatusOfBooking(id, 7L, true)
+        );
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-approved-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void updateStatus_ShouldThrowExceptionIfStatusEqualActual() {
+        assertThrows(
+                ValidateException.class,
+                () -> bookingService.updateStatusOfBooking(1L, 7L, true)
+
+        );
     }
 }
+
+
+
+
+//package ru.practicum.shareit.booking.service;
+//
+//import org.junit.jupiter.api.BeforeEach;
+//import org.junit.jupiter.api.Test;
+//import org.junit.jupiter.api.extension.ExtendWith;
+//import org.mockito.*;
+//import org.mockito.junit.jupiter.MockitoExtension;
+//import ru.practicum.shareit.booking.Status;
+//import ru.practicum.shareit.booking.dto.BookingDtoInput;
+//import ru.practicum.shareit.booking.dto.BookingDtoOutput;
+//import ru.practicum.shareit.booking.dto.BookingMapper;
+//import ru.practicum.shareit.booking.model.Booking;
+//import ru.practicum.shareit.booking.repository.BookingRepository;
+//import ru.practicum.shareit.exception.NotFoundException;
+//import ru.practicum.shareit.exception.ValidateException;
+//import ru.practicum.shareit.item.dto.ItemDtoIdAndName;
+//import ru.practicum.shareit.item.model.Item;
+//import ru.practicum.shareit.item.repository.ItemRepository;
+//import ru.practicum.shareit.user.User;
+//import ru.practicum.shareit.user.dto.UserDtoIdAndName;
+//import ru.practicum.shareit.user.repository.UserRepository;
+//
+//import static org.mockito.Mockito.*;
+//import static org.junit.jupiter.api.Assertions.*;
+//
+//import java.time.LocalDateTime;
+//import java.time.temporal.ChronoUnit;
+//import java.util.*;
+//
+//@ExtendWith(MockitoExtension.class)
+//class BookingServiceImplTest {
+//
+//    @Mock
+//    private BookingRepository bookingRepository;
+//
+//    @Mock
+//    private UserRepository userRepository;
+//
+//    @Mock
+//    private ItemRepository itemRepository;
+//
+//    @Mock
+//    private BookingMapper bookingMapper;
+//
+//    @InjectMocks
+//    private BookingServiceImpl bookingService;
+//
+//    private User user;
+//    private User owner;
+//    private Item item;
+//    private Booking booking;
+//    private BookingDtoInput inputDto;
+//    private BookingDtoOutput outputDto;
+//
+//    @BeforeEach
+//    void setUp() {
+//        user = new User();
+//        user.setId(1L);
+//
+//        owner = new User();
+//        owner.setId(2L);
+//
+//        item = new Item();
+//        item.setId(10L);
+//        item.setAvailable(true);
+//        item.setOwner(owner);
+//
+//        booking = new Booking();
+//        booking.setId(100L);
+//        booking.setItem(item);
+//        booking.setBooker(user);
+//        booking.setStatus(Status.WAITING);
+//
+//        inputDto = createSampleBookingDtoInput();
+//        inputDto.setItemId(item.getId());
+//        inputDto.setStart(LocalDateTime.now().plusDays(1));
+//        inputDto.setEnd(LocalDateTime.now().plusDays(2));
+//
+//        outputDto = createSampleBookingDtoOutput(123L);
+//    }
+//
+//    private BookingDtoInput createSampleBookingDtoInput() {
+//        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+//        return new BookingDtoInput(
+//                now.plusDays(1),
+//                now.plusDays(2),
+//                123L // itemId
+//        );
+//    }
+//
+//    private BookingDtoOutput createSampleBookingDtoOutput(Long id) {
+//        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+//        ItemDtoIdAndName item = new ItemDtoIdAndName(123L, "Item Name");
+//        UserDtoIdAndName booker = new UserDtoIdAndName(1L, "User Name");
+//        return new BookingDtoOutput(
+//                id,
+//                now.plusDays(1),
+//                now.plusDays(2),
+//                item,
+//                booker,
+//                Status.WAITING
+//        );
+//    }
+//
+//    @Test
+//    void create_ShouldCreateBooking_WhenDataIsValid() {
+//        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+//        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+//        when(bookingMapper.fromInputDto(any(), any(), any())).thenReturn(booking);
+//        when(bookingRepository.save(any())).thenReturn(booking);
+//        when(bookingMapper.toOutputDto(any())).thenReturn(outputDto);
+//
+//        BookingDtoOutput result = bookingService.create(user.getId(), inputDto);
+//
+//        assertNotNull(result);
+//        verify(userRepository).findById(user.getId());
+//        verify(itemRepository).findById(inputDto.getItemId());
+//        verify(bookingMapper).fromInputDto(any(), any(), any());
+//        verify(bookingRepository).save(any());
+//        verify(bookingMapper).toOutputDto(any());
+//    }
+//
+//    @Test
+//    void create_ShouldThrowValidateException_WhenStartAfterEnd() {
+//        inputDto.setStart(LocalDateTime.now().plusDays(3));
+//        inputDto.setEnd(LocalDateTime.now().plusDays(2));
+//
+//        assertThrows(ValidateException.class, () ->
+//                bookingService.create(user.getId(), inputDto)
+//        );
+//    }
+//
+//    @Test
+//    void create_ShouldThrowNotFoundException_WhenUserNotFound() {
+//        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+//
+//        assertThrows(NotFoundException.class, () ->
+//                bookingService.create(user.getId(), inputDto)
+//        );
+//    }
+//
+//    @Test
+//    void create_ShouldThrowNotFoundException_WhenItemNotFound() {
+//        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+//        when(itemRepository.findById(anyLong())).thenReturn(Optional.empty());
+//
+//        assertThrows(NotFoundException.class, () ->
+//                bookingService.create(user.getId(), inputDto)
+//        );
+//    }
+//
+//    @Test
+//    void getByID_ShouldReturnBooking_WhenUserIsBookerOrOwner() {
+//        long userID = user.getId();
+//
+//        Booking existingBooking = new Booking();
+//        existingBooking.setId(200L);
+//        existingBooking.setItem(item);
+//        existingBooking.setBooker(user);
+//
+//        when(bookingRepository.findById(existingBooking.getId()))
+//                .thenReturn(Optional.of(existingBooking));
+//        when(userRepository.findById(userID))
+//                .thenReturn(Optional.of(user));
+//        when(bookingMapper.toOutputDto(existingBooking))
+//                .thenReturn(outputDto);
+//
+//        var result = bookingService.getById(userID, existingBooking.getId());
+//
+//        assertNotNull(result);
+//        verify(bookingMapper).toOutputDto(existingBooking);
+//    }
+//}
