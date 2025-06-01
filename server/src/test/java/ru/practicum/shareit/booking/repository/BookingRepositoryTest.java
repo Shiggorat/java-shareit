@@ -1,86 +1,200 @@
 package ru.practicum.shareit.booking.repository;
 
-import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.jdbc.SqlGroup;
+import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.Status;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.User;
+
+import jakarta.persistence.EntityManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_METHOD;
-import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
 
 @DataJpaTest
-@SqlGroup({
-        @Sql(value = {"/before.sql"}, executionPhase = BEFORE_TEST_METHOD),
-        @Sql(value = {"/after.sql"}, executionPhase = AFTER_TEST_METHOD)
-})
+public class BookingRepositoryTest {
 
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
-class BookingRepositoryTest {
-    private final BookingRepository bookingRepository;
-    private final User userOleg = new User(1L, "Oleg", "oleg@yandex.ru");
-    private final User userIrina = new User(2L, "Irina", "irina@yandex.ru");
-    private final ItemRequest request = new ItemRequest(
-            4L,
-            "I want to dry my hair",
-            userIrina,
-            LocalDateTime.of(2023, 1, 22, 12, 0));
-    private final Item itemDryer = new Item(3L,
-            "Dryer",
-            "For curly hair",
-            true,
-            userOleg,
-            request);
-    private final Booking booking = new Booking(
-            4L,
-            LocalDateTime.of(2023, 12, 10, 12, 0),
-            LocalDateTime.of(2023, 12, 21, 12, 0),
-            itemDryer,
-            userIrina,
-            Status.APPROVED);
-    private final Item itemHammer = new Item(5L, "Hammer",
-            "With gold handle", true, userIrina, null);
-    private final Booking bookingCurrent = new Booking(
-            7L,
-            LocalDateTime.of(2023, 1, 20, 12, 0),
-            LocalDateTime.of(2023, 2, 15, 12, 0),
-            itemHammer,
-            userOleg,
-            Status.APPROVED);
-    private final Booking bookingPast = new Booking(
-            6L,
-            LocalDateTime.of(2013, 1, 1, 12, 0),
-            LocalDateTime.of(2013, 2, 2, 12, 0),
-            itemHammer,
-            userOleg,
-            Status.APPROVED);
-    private final Set<Long> setIds = Set.of(1L, 2L, 3L, 4L, 5L, 6L, 7L);
+    @Autowired
+    private BookingRepository bookingRepository;
 
-    @Test
-    void shouldFindByItemId_AndStartBefore_OrderByEndDesc() {
-        List<Booking> result = bookingRepository.findLastBookings(setIds);
+    @Autowired
+    private EntityManager entityManager; // для сохранения тестовых данных
 
-        assertThat(result).isNotEmpty();
-        assertThat(result.get(0).getId()).isEqualTo(bookingCurrent.getId());
-        assertThat(result.get(1).getId()).isEqualTo(bookingPast.getId());
+    private User user1;
+    private User user2;
+    private Item item1;
+    private Item item2;
+
+    @BeforeEach
+    void setUp() {
+        // Создаем пользователей
+        user1 = new User(null, "User1", "user1@example.com");
+        user2 = new User(null, "User2", "user2@example.com");
+        entityManager.persist(user1);
+        entityManager.persist(user2);
+
+        // Создаем предметы
+        item1 = new Item(null, "Item1", "Description1", true, user2, null);
+        item2 = new Item(null, "Item2", "Description2", true, user2, null);
+        entityManager.persist(item1);
+        entityManager.persist(item2);
+
+        // Создаем бронирования
+        Booking booking1 = new Booking(null, LocalDateTime.now().minusDays(5), LocalDateTime.now().minusDays(3), item1, user1, Status.APPROVED);
+        Booking booking2 = new Booking(null, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3), item2, user1, Status.WAITING);
+        Booking booking3 = new Booking(null, LocalDateTime.now().minusDays(10), LocalDateTime.now().minusDays(8), item2, user1, Status.REJECTED);
+        entityManager.persist(booking1);
+        entityManager.persist(booking2);
+        entityManager.persist(booking3);
     }
 
     @Test
-    void shouldFindByItemId_AndStartAfter_OrderByEndAsc() {
-        List<Booking> result = bookingRepository.findNextBookings(setIds);
+    void findBookingsByBooker_Id_ShouldReturnBookings() {
+        List<Booking> bookings = bookingRepository.findBookingsByBooker_Id(user1.getId(), Sort.by(Sort.Direction.DESC, "start"));
+        assertThat(bookings).hasSize(3);
+    }
 
-        assertThat(result).isNotEmpty();
-        assertThat(result.getFirst().getId()).isEqualTo(booking.getId());
+    @Test
+    void findBookingsByBooker_IdAndEndBefore_ShouldReturnPastBookings() {
+        List<Booking> bookings = bookingRepository.findBookingsByBooker_IdAndEndBefore(
+                user1.getId(), Sort.by(Sort.Direction.DESC, "end"), LocalDateTime.now());
+        assertThat(bookings).hasSize(2); // booking1 и booking3
+    }
+
+    @Test
+    void findBookingsByBooker_IdAndStartAfter_ShouldReturnFutureBookings() {
+        List<Booking> bookings = bookingRepository.findBookingsByBooker_IdAndStartAfter(
+                user1.getId(), Sort.by(Sort.Direction.ASC, "start"), LocalDateTime.now());
+        assertThat(bookings).hasSize(1); // booking2
+    }
+
+    @Test
+    void findBookingsByBooker_IdAndStatus_ShouldReturnStatusFiltered() {
+        List<Booking> waitingBookings = bookingRepository.findBookingsByBooker_IdAndStatus(
+                user1.getId(), Sort.by(Sort.Direction.DESC, "start"), Status.WAITING);
+        assertThat(waitingBookings).hasSize(1);
+
+        List<Booking> rejectedBookings = bookingRepository.findBookingsByBooker_IdAndStatus(
+                user1.getId(), Sort.by(Sort.Direction.DESC, "start"), Status.REJECTED);
+        assertThat(rejectedBookings).hasSize(1);
+
+        List<Booking> approvedBookings = bookingRepository.findBookingsByBooker_IdAndStatus(
+                user1.getId(), Sort.by(Sort.Direction.DESC, "start"), Status.APPROVED);
+        assertThat(approvedBookings).hasSize(1);
+    }
+
+    @Test
+    void findBookingsByItem_Owner_Id_ShouldReturnOwnerItems() {
+        List<Booking> bookings = bookingRepository.findBookingsByItem_Owner_Id(user2.getId(), Sort.by(Sort.Direction.DESC, "start"));
+        assertThat(bookings).hasSize(3);
+    }
+
+    @Test
+    void findBookingsByItem_Owner_IdAndEndBefore_ShouldReturnPastOwnerItems() {
+        List<Booking> bookings = bookingRepository.findBookingsByItem_Owner_IdAndEndBefore(
+                user2.getId(), Sort.by(Sort.Direction.DESC, "end"), LocalDateTime.now());
+        assertThat(bookings).hasSize(2); // бронирования с end в прошлом (booking1 и booking3)
+    }
+
+    @Test
+    void findBookingsByItem_Owner_IdAndStartAfter_ShouldReturnUpcomingOwnerItems() {
+        List<Booking> bookings = bookingRepository.findBookingsByItem_Owner_IdAndStartAfter(
+                user2.getId(), Sort.by(Sort.Direction.ASC, "start"), LocalDateTime.now());
+        assertThat(bookings).hasSize(1); // бронирование с start в будущем (booking2)
     }
 }
+
+
+
+//package ru.practicum.shareit.booking.repository;
+//
+//import lombok.RequiredArgsConstructor;
+//import org.junit.jupiter.api.Test;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+//import org.springframework.test.context.jdbc.Sql;
+//import org.springframework.test.context.jdbc.SqlGroup;
+//import ru.practicum.shareit.booking.Status;
+//import ru.practicum.shareit.booking.model.Booking;
+//import ru.practicum.shareit.item.model.Item;
+//import ru.practicum.shareit.request.ItemRequest;
+//import ru.practicum.shareit.user.User;
+//
+//import java.time.LocalDateTime;
+//import java.util.List;
+//import java.util.Set;
+//
+//import static org.assertj.core.api.Assertions.assertThat;
+//import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.AFTER_TEST_METHOD;
+//import static org.springframework.test.context.jdbc.Sql.ExecutionPhase.BEFORE_TEST_METHOD;
+//
+//@DataJpaTest
+//@SqlGroup({
+//        @Sql(value = {"/before.sql"}, executionPhase = BEFORE_TEST_METHOD),
+//        @Sql(value = {"/after.sql"}, executionPhase = AFTER_TEST_METHOD)
+//})
+//
+//@RequiredArgsConstructor(onConstructor_ = @Autowired)
+//class BookingRepositoryTest {
+//    private final BookingRepository bookingRepository;
+//    private final User userOleg = new User(1L, "Oleg", "oleg@yandex.ru");
+//    private final User userIrina = new User(2L, "Irina", "irina@yandex.ru");
+//    private final ItemRequest request = new ItemRequest(
+//            4L,
+//            "I want to dry my hair",
+//            userIrina,
+//            LocalDateTime.of(2023, 1, 22, 12, 0));
+//    private final Item itemDryer = new Item(3L,
+//            "Dryer",
+//            "For curly hair",
+//            true,
+//            userOleg,
+//            request);
+//    private final Booking booking = new Booking(
+//            4L,
+//            LocalDateTime.of(2023, 12, 10, 12, 0),
+//            LocalDateTime.of(2023, 12, 21, 12, 0),
+//            itemDryer,
+//            userIrina,
+//            Status.APPROVED);
+//    private final Item itemHammer = new Item(5L, "Hammer",
+//            "With gold handle", true, userIrina, null);
+//    private final Booking bookingCurrent = new Booking(
+//            7L,
+//            LocalDateTime.of(2023, 1, 20, 12, 0),
+//            LocalDateTime.of(2023, 2, 15, 12, 0),
+//            itemHammer,
+//            userOleg,
+//            Status.APPROVED);
+//    private final Booking bookingPast = new Booking(
+//            6L,
+//            LocalDateTime.of(2013, 1, 1, 12, 0),
+//            LocalDateTime.of(2013, 2, 2, 12, 0),
+//            itemHammer,
+//            userOleg,
+//            Status.APPROVED);
+//    private final Set<Long> setIds = Set.of(1L, 2L, 3L, 4L, 5L, 6L, 7L);
+//
+//    @Test
+//    void shouldFindByItemId_AndStartBefore_OrderByEndDesc() {
+//        List<Booking> result = bookingRepository.findLastBookings(setIds);
+//
+//        assertThat(result).isNotEmpty();
+//        assertThat(result.get(0).getId()).isEqualTo(bookingCurrent.getId());
+//        assertThat(result.get(1).getId()).isEqualTo(bookingPast.getId());
+//    }
+//
+//    @Test
+//    void shouldFindByItemId_AndStartAfter_OrderByEndAsc() {
+//        List<Booking> result = bookingRepository.findNextBookings(setIds);
+//
+//        assertThat(result).isNotEmpty();
+//        assertThat(result.getFirst().getId()).isEqualTo(booking.getId());
+//    }
+//}
