@@ -91,6 +91,7 @@ public class BookingRepositoryTest {
         List<Booking> bookings = bookingRepository.findBookingsByItem_Owner_Id(user2.getId(), Sort.by(Sort.Direction.DESC, "start"));
         assertThat(bookings).hasSize(3);
     }
+
     @Test
     void findBookingsByItem_Owner_IdAndEndBefore_ShouldReturnPastOwnerItems() {
         List<Booking> bookings = bookingRepository.findBookingsByItem_Owner_IdAndEndBefore(
