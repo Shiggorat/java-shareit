@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.repository;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -22,11 +23,17 @@ class ItemRepositoryTest {
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
 
+    @BeforeEach
+    void cleanDatabase() {
+        userRepository.deleteAll();
+        itemRepository.deleteAll();
+    }
+
     @Test
     void getByText_shouldSuccess() {
-        User userOleg = new User(1L, "nam", "man@yandex.ru");
+        User userOleg = new User(null, "nam", "man@yandex.ru");
         userRepository.save(userOleg);
-        Item item = itemRepository.save(new Item(1L, "playstation", "For real man",
+        Item item = itemRepository.save(new Item(null, "playstation", "For real man",
                 true, userOleg, null));
 
         List<Item> result = itemRepository.findByText("ays", Pageable.unpaged());
