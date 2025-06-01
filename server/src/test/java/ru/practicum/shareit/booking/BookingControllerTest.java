@@ -12,6 +12,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.booking.dto.BookingDtoOutput;
+import ru.practicum.shareit.exception.NotFoundCustomException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.item.dto.ItemDtoIdAndName;
@@ -111,8 +112,6 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-
-
     @Test
     void shouldForbiddenCreate() throws Exception {
         Mockito
@@ -157,7 +156,24 @@ class BookingControllerTest {
                 .updateStatusOfBooking(2L, 4L, true);
     }
 
+    @Test
+    void updateStatus_shouldThrowException() throws Exception {
+        Mockito
+                .when(bookingService.updateStatusOfBooking(anyLong(), anyLong(), eq(true)))
+                .thenThrow(new NotFoundCustomException("You are not owner of this item"));
 
+        mvc.perform(
+                        patch("/bookings/{bookingId}", bookingDto.getId())
+                                .header("X-Sharer-User-Id", userIrina.getId())
+                                .param("approved", "true")
+                                .characterEncoding(StandardCharsets.UTF_8)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNotFound());
+
+        Mockito.verify(bookingService, Mockito.times(1))
+                .updateStatusOfBooking(2L, 4L, true);
+    }
 
     @Test
     void shouldReturnById() throws Exception {
