@@ -383,5 +383,75 @@ class BookingServiceImplTest {
         });
     }
 
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-unsupported-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldThrowExceptionIfStateIsUnsupported() {
 
+        assertThrows(
+                ValidateException.class,
+                () -> bookingService.getAllByUser(1L, State.UNSUPPORTED_STATUS, 0, 10)
+        );
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-current-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByUserIfStateIsCurrent() {
+        List<BookingDtoOutput> actual = bookingService.getAllByUser(1L, State.CURRENT, 0, 1);
+        System.out.println(actual);
+        assertEquals(actual.getFirst().getId(), 7L);
+        assertEquals(actual.getFirst().getStatus(), Status.WAITING);
+        assertEquals(actual.getFirst().getItem().getId(), 3L);
+        assertEquals(actual.getFirst().getBooker().getId(), 1L);
+        assertTrue(actual.getFirst().getStart().isBefore(LocalDateTime.now()));
+        assertTrue(actual.getFirst().getEnd().isAfter(LocalDateTime.now()));
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-future-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByUserIfStateIsFuture() {
+        List<BookingDtoOutput> actual = bookingService.getAllByUser(1L,State.FUTURE, 0, 1);
+
+        assertEquals(actual.getFirst().getId(), 7L);
+        assertEquals(actual.getFirst().getStatus(), Status.WAITING);
+        assertEquals(actual.getFirst().getItem().getId(), 3L);
+        assertEquals(actual.getFirst().getBooker().getId(), 1L);
+        assertTrue(actual.getFirst().getStart().isAfter(LocalDateTime.now()));
+        assertTrue(actual.getFirst().getEnd().isAfter(LocalDateTime.now()));
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-current-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByOwnerIfStateIsCurrent() {
+        List<BookingDtoOutput> actual = bookingService.getAllByOwner(1L, State.CURRENT, 0, 1);
+
+        assertEquals(actual.getFirst().getId(), 7L);
+        assertEquals(actual.getFirst().getStatus(), Status.WAITING);
+        assertEquals(actual.getFirst().getItem().getId(), 3L);
+        assertEquals(actual.getFirst().getBooker().getId(), 1L);
+        assertTrue(actual.getFirst().getStart().isBefore(LocalDateTime.now()));
+        assertTrue(actual.getFirst().getEnd().isAfter(LocalDateTime.now()));
+    }
+
+    @Test
+    @SqlGroup({
+            @Sql(value = {"before-with-future-booking.sql"}, executionPhase = BEFORE_TEST_METHOD)
+    })
+    void shouldByOwnerIfStateIsFuture() {
+        List<BookingDtoOutput> actual = bookingService.getAllByOwner(1L, State.FUTURE, 0, 1);
+
+        assertEquals(actual.getFirst().getId(), 7L);
+        assertEquals(actual.getFirst().getStatus(), Status.WAITING);
+        assertEquals(actual.getFirst().getItem().getId(), 3L);
+        assertEquals(actual.getFirst().getBooker().getId(), 1L);
+        assertTrue(actual.getFirst().getStart().isAfter(LocalDateTime.now()));
+        assertTrue(actual.getFirst().getEnd().isAfter(LocalDateTime.now()));
+    }
 }

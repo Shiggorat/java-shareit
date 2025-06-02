@@ -11,4 +11,4 @@ INSERT INTO items (id, name, description, is_available, owner_id, request_id)
 VALUES (3, 'Dryer', 'For curly hair', true, 1, 4);
 
 INSERT INTO bookings (id, start_date, end_date, item_id, booker_id, status)
-VALUES (7, '2023-01-20 12:00:00', '2023-02-15 12:00:00', 3, 1, 'WAITING');
+VALUES (7, '2025-06-01 10:00:00', '2025-09-10 10:00:00', 3, 1, 'WAITING');
