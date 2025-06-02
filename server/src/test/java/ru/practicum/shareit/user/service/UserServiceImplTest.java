@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -106,6 +107,20 @@ class UserServiceImplTest {
                 .when(mockUserRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> userService.update(99L, userDtoIrina));
+    }
+
+    @Test
+    void update_shouldThrowExceptionIfEmailAlreadyExists() {
+        long userIdToUpdate = 1L;
+        String existingEmail = "existing@example.com";
+        User userToUpdate = new User(userIdToUpdate, "Oleg", "oleg@yandex.ru");
+        User userWithSameEmail = new User(2L, "Irina", existingEmail);
+        UserDto updateDto = new UserDto(userIdToUpdate, "Oleg Updated", existingEmail);
+        Mockito.when(mockUserRepository.findById(userIdToUpdate))
+                .thenReturn(Optional.of(userToUpdate));
+        Mockito.when(mockUserRepository.findByEmail(existingEmail))
+                .thenReturn(Optional.of(userWithSameEmail));
+        assertThrows(EmailException.class, () -> userService.update(userIdToUpdate, updateDto));
     }
 
     @Test
