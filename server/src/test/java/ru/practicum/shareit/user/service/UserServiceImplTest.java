@@ -137,4 +137,18 @@ class UserServiceImplTest {
         Mockito
                 .verify(mockUserRepository, Mockito.times(1)).deleteAll();
     }
+
+    @Test
+    void update_shouldNotChangeNameIfNull() {
+        UserDto updateDto = new UserDto(null, null, "newemail@yandex.ru");
+        Mockito.when(mockUserRepository.findById(anyLong()))
+                .thenReturn(Optional.of(userOleg));
+        Mockito.when(mockUserRepository.findByEmail(updateDto.getEmail()))
+                .thenReturn(Optional.empty());
+
+        UserDto resultDto = userService.update(userOleg.getId(), updateDto);
+
+        assertEquals("Oleg", resultDto.getName()); // имя осталось прежним
+        assertEquals("newemail@yandex.ru", resultDto.getEmail());
+    }
 }

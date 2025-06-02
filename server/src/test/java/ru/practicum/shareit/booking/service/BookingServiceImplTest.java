@@ -367,4 +367,21 @@ class BookingServiceImplTest {
 
         );
     }
+
+    @Test
+    void create_ShouldThrowValidateException_WhenStartNotBeforeEnd() {
+        long userId = 1L;
+        long itemId = 2L;
+        LocalDateTime start = LocalDateTime.now().plusDays(2);
+        LocalDateTime end = start.minusDays(1); // некорректное время
+
+        // Используем конструктор с аргументами
+        BookingDtoInput inputDto = new BookingDtoInput(start, end, itemId);
+
+        assertThrows(ValidateException.class, () -> {
+            bookingService.create(userId, inputDto);
+        });
+    }
+
+
 }
