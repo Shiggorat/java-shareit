@@ -220,7 +220,7 @@ class BookingControllerTest {
     @Test
     void shouldReturnByUser() throws Exception {
         Mockito
-                .when(bookingService.getAllByUser(anyLong(), any()))
+                .when(bookingService.getAllByUser(anyLong(), any(), anyInt(), anyInt()))
                 .thenReturn(List.of(bookingDto));
 
         mvc.perform(
@@ -243,13 +243,13 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.[0].status", is(bookingDto.getStatus().name())));
 
         Mockito.verify(bookingService, Mockito.times(1))
-                .getAllByUser(1L, State.ALL);
+                .getAllByUser(1L, State.ALL, 0, 1);
     }
 
     @Test
     void shouldReturnByOwner() throws Exception {
         Mockito
-                .when(bookingService.getAllByOwner(anyLong(), any()))
+                .when(bookingService.getAllByOwner(anyLong(), any(), anyInt(), anyInt()))
                 .thenReturn(List.of(bookingDto));
 
         mvc.perform(

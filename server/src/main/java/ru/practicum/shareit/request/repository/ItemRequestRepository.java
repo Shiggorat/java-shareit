@@ -7,7 +7,7 @@ import ru.practicum.shareit.request.ItemRequest;
 import java.util.List;
 
 public interface ItemRequestRepository extends JpaRepository<ItemRequest, Long> {
-    List<ItemRequest> findByRequestor_Id(long requestorId);
+    List<ItemRequest> findByRequester_Id(long requesterId);
 
-    List<ItemRequest> findByRequestor_IdNot(long requestorId, Pageable pageable);
+    List<ItemRequest> findByRequester_IdNot(long requesterId, Pageable pageable);
 }

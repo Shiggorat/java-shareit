@@ -15,8 +15,8 @@ public class ItemRequestDtoMapperImpl implements ItemRequestDtoMapper {
     @Override
     public ItemRequestOutput toDtoOutput(ItemRequest itemRequest, List<ItemDtoRequests> items) {
         return new ItemRequestOutput(itemRequest.getId(), itemRequest.getDescription(),
-                new UserDtoIdAndName(itemRequest.getRequestor().getId(),
-                        itemRequest.getRequestor().getName()),
+                new UserDtoIdAndName(itemRequest.getRequester().getId(),
+                        itemRequest.getRequester().getName()),
                 itemRequest.getCreated(), items);
     }
 

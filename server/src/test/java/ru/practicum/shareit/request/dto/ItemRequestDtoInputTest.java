@@ -30,12 +30,12 @@ class ItemRequestDtoInputTest {
 
         assertThat(result).hasJsonPath("$.id");
         assertThat(result).hasJsonPath("$.description");
-        assertThat(result).hasJsonPath("$.requestorId");
+        assertThat(result).hasJsonPath("$.requesterId");
         assertThat(result).hasJsonPath("$.created");
         assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(request.getId().intValue());
         assertThat(result).extractingJsonPathValue("$.description").isEqualTo(request.getDescription());
-        assertThat(result).extractingJsonPathNumberValue("$.requestorId")
-                .isEqualTo(request.getRequestorId().intValue());
+        assertThat(result).extractingJsonPathNumberValue("$.requesterId")
+                .isEqualTo(request.getRequesterId().intValue());
         assertThat(result).extractingJsonPathValue("$.created").isEqualTo(request.getCreated().toString());
     }
 }

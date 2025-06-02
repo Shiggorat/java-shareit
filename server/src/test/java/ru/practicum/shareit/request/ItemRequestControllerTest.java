@@ -85,7 +85,7 @@ class ItemRequestControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(request.getId()), Long.class))
                 .andExpect(jsonPath("$.description", is(request.getDescription())))
-                .andExpect(jsonPath("$.requestor.id", is(request.getRequestorId()), Long.class))
+                .andExpect(jsonPath("$.requester.id", is(request.getRequesterId()), Long.class))
                 .andExpect(jsonPath("$.created", is(created)));
 
         Mockito.verify(itemRequestService, Mockito.times(1))

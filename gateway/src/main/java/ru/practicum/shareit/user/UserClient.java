@@ -1,15 +1,20 @@
 package ru.practicum.shareit.user;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.client.BaseClient;
 import ru.practicum.shareit.user.dto.UserDto;
 
-
 public class UserClient extends BaseClient {
+    private static final String API_PREFIX = "/users";
 
-    public UserClient(RestTemplate builder) {
-        super(builder);
+    public UserClient(String serverUrl, RestTemplateBuilder builder) {
+        super(
+                builder
+                        .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl + API_PREFIX))
+                        .build()
+        );
     }
 
     public ResponseEntity<Object> getUsers() {
@@ -29,7 +34,6 @@ public class UserClient extends BaseClient {
     }
 
     public ResponseEntity<Object> deleteUser(long id) {
-
         return delete("/" + id);
     }
 }

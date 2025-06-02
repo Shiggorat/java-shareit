@@ -23,9 +23,9 @@ public class ItemRequestController {
     private final ItemRequestService itemRequestService;
 
     @GetMapping
-    public List<ItemRequestOutput> getAll(@RequestHeader("X-Sharer-User-Id") long requestorId) {
+    public List<ItemRequestOutput> getAll(@RequestHeader("X-Sharer-User-Id") long requesterId) {
         log.debug("Request GET to /requests");
-        return itemRequestService.getAll(requestorId);
+        return itemRequestService.getAll(requesterId);
     }
 
     @GetMapping("/{requestId}")
@@ -36,17 +36,17 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public List<ItemRequestOutput> getAllAnotherUsers(@RequestHeader("X-Sharer-User-Id") long requestorId,
+    public List<ItemRequestOutput> getAllAnotherUsers(@RequestHeader("X-Sharer-User-Id") long requesterId,
                                                       @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
                                                       @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
         log.debug("Request GET to /requests/all");
-        return itemRequestService.getAllAnotherUsers(requestorId, from, size);
+        return itemRequestService.getAllAnotherUsers(requesterId, from, size);
     }
 
     @PostMapping
-    public ItemRequestOutput create(@RequestHeader("X-Sharer-User-Id") long requestorId,
+    public ItemRequestOutput create(@RequestHeader("X-Sharer-User-Id") long requesterId,
                                     @RequestBody @Valid ItemRequestDto itemRequestDto) {
         log.debug("Request POST to /requests");
-        return itemRequestService.create(requestorId, itemRequestDto);
+        return itemRequestService.create(requesterId, itemRequestDto);
     }
 }

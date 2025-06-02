@@ -121,7 +121,7 @@ class ItemRequestServiceImplTest {
                 .when(mockUserRepository.existsById(userOleg.getId()))
                 .thenReturn(true);
         Mockito
-                .when(mockRequestRepository.findByRequestor_Id(userOleg.getId()))
+                .when(mockRequestRepository.findByRequester_Id(userOleg.getId()))
                 .thenReturn(List.of(request));
         Mockito
                 .when(mockItemRepository.findByRequest_IdIn(anyList()))
@@ -144,7 +144,7 @@ class ItemRequestServiceImplTest {
     @Test
     void getAllAnotherUsers_shouldSuccess() {
         Mockito
-                .when(mockRequestRepository.findByRequestor_IdNot(
+                .when(mockRequestRepository.findByRequester_IdNot(
                                 userIrina.getId(),
                                 PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "created"))
                         )

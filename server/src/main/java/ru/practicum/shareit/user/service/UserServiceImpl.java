@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.user.User;
@@ -15,6 +16,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -50,7 +52,10 @@ public class UserServiceImpl implements UserService {
         log.debug("Request POST to /users, with id = {}, name = {}, email = {}",
                 userDto.getId(), userDto.getName(), userDto.getEmail());
         if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new ValidateException("Email already exists");
+            throw new EmailException("Email already exists");
+        }
+        if (!isValidEmail(userDto.getEmail())) {
+            throw new ValidateException("Invalid email format");
         }
         User user = userMapper.fromDto(userDto);
         return userMapper.toDto(userRepository.save(user));
@@ -66,7 +71,7 @@ public class UserServiceImpl implements UserService {
         if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
             Optional<User> userWithSameEmail = userRepository.findByEmail(userDto.getEmail());
             if (userWithSameEmail.isPresent() && userWithSameEmail.get().getId() != id) {
-                throw new ValidateException("Email already exists");
+                throw new EmailException("Email already exists");
             }
             user.setEmail(userDto.getEmail());
         }
@@ -96,5 +101,14 @@ public class UserServiceImpl implements UserService {
             user.setEmail(userDto.getEmail());
         }
         return user;
+    }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (email == null) {
+            return false;
+        }
+        return pattern.matcher(email).matches();
     }
 }

@@ -40,11 +40,11 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemMapper itemMapper = new ItemMapperImpl(new UserMapperImpl());
 
     @Override
-    public List<ItemRequestOutput> getAll(long requestorId) {
-        if (!userRepository.existsById(requestorId)) {
-            throw new NotFoundException("User with id = " + requestorId + " not found");
+    public List<ItemRequestOutput> getAll(long requesterId) {
+        if (!userRepository.existsById(requesterId)) {
+            throw new NotFoundException("User with id = " + requesterId + " not found");
         }
-        List<ItemRequest> requests = itemRequestRepository.findByRequestor_Id(requestorId);
+        List<ItemRequest> requests = itemRequestRepository.findByRequester_Id(requesterId);
 
         return getItemRequestsDtoWithItemsFromRequests(requests);
     }
@@ -65,8 +65,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public List<ItemRequestOutput> getAllAnotherUsers(long requestorId, int from, int size) {
-        List<ItemRequest> requests = itemRequestRepository.findByRequestor_IdNot(requestorId,
+    public List<ItemRequestOutput> getAllAnotherUsers(long requesterId, int from, int size) {
+        List<ItemRequest> requests = itemRequestRepository.findByRequester_IdNot(requesterId,
                 PageRequest.of(from / size, size,
                         Sort.by(Sort.Direction.DESC, "created")));
 
@@ -74,11 +74,11 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public ItemRequestOutput create(long requestorId, ItemRequestDto itemRequestDto) {
-        if (!userRepository.existsById(requestorId)) {
-            throw new NotFoundException("User with id = " + requestorId + " not found");
+    public ItemRequestOutput create(long requesterId, ItemRequestDto itemRequestDto) {
+        if (!userRepository.existsById(requesterId)) {
+            throw new NotFoundException("User with id = " + requesterId + " not found");
         }
-        User owner = userRepository.findById(requestorId).get();
+        User owner = userRepository.findById(requesterId).get();
         ItemRequest itemRequest = itemRequestDtoMapper.fromDtoInput(itemRequestDto, owner);
         itemRequestRepository.save(itemRequest);
 

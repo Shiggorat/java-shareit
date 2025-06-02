@@ -20,8 +20,8 @@ public class ItemRequestController {
     private final ItemRequestClient itemRequestClient;
 
     @GetMapping
-    public ResponseEntity<Object> getAll(@RequestHeader("X-Sharer-User-Id") long requestorId) {
-        return itemRequestClient.getItemRequests(requestorId);
+    public ResponseEntity<Object> getAll(@RequestHeader("X-Sharer-User-Id") long requesterId) {
+        return itemRequestClient.getItemRequests(requesterId);
     }
 
     @GetMapping("/{requestId}")
@@ -31,15 +31,15 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Object> getAllAnotherUsers(@RequestHeader("X-Sharer-User-Id") long requestorId,
+    public ResponseEntity<Object> getAllAnotherUsers(@RequestHeader("X-Sharer-User-Id") long requesterId,
                                                      @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
                                                      @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
-        return itemRequestClient.getAllAnotherUsers(requestorId, from, size);
+        return itemRequestClient.getAllAnotherUsers(requesterId, from, size);
     }
 
     @PostMapping
-    public ResponseEntity<Object> create(@RequestHeader("X-Sharer-User-Id") long requestorId,
+    public ResponseEntity<Object> create(@RequestHeader("X-Sharer-User-Id") long requesterId,
                                          @RequestBody @Valid ItemRequestDto itemRequestDto) {
-        return itemRequestClient.create(requestorId, itemRequestDto);
+        return itemRequestClient.create(requesterId, itemRequestDto);
     }
 }
