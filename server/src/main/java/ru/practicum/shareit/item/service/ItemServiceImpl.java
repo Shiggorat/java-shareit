@@ -10,7 +10,6 @@ import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingMapperImpl;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ServerException;
 import ru.practicum.shareit.item.comments.*;
