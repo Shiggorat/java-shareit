@@ -10,9 +10,9 @@ import org.springframework.data.domain.PageRequest;
 import ru.practicum.shareit.booking.Status;
 import ru.practicum.shareit.booking.dto.BookingIdAndBookerId;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.ServerException;
 import ru.practicum.shareit.item.comments.Comment;
 import ru.practicum.shareit.item.comments.CommentDto;
 import ru.practicum.shareit.item.comments.CommentRepository;
@@ -515,7 +515,6 @@ class ItemServiceImplTest {
     @Test
     void delete_shouldSuccess() {
         Item apple = new Item(5L, "Cup", "Red", true, userOleg, null);
-        // Сделайте заглушки ленивыми
         lenient().when(mockItemRepository.existsById(apple.getId())).thenReturn(true);
         lenient().when(mockUserRepository.existsById(userOleg.getId())).thenReturn(true);
 
@@ -543,7 +542,7 @@ class ItemServiceImplTest {
 
 
         assertThrows(
-                ValidateException.class,
+                ServerException.class,
                 () -> itemService.createComment(userOleg.getId(), dryer.getId(), commentDto)
         );
     }

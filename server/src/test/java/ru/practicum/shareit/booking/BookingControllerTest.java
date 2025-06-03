@@ -15,7 +15,6 @@ import ru.practicum.shareit.booking.dto.BookingDtoOutput;
 import ru.practicum.shareit.exception.NotFoundCustomException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemDtoIdAndName;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -110,22 +109,6 @@ class BookingControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void shouldReturnBadRequestIfItemUnavailable() throws Exception {
-        Mockito
-                .when(bookingService.create(anyLong(), any()))
-                .thenThrow(new ValidateException("Item is not available"));
-
-        mvc.perform(
-                        post("/bookings")
-                                .header("X-Sharer-User-Id", userOleg.getId())
-                                .content(mapper.writeValueAsString(inputBookingDto))
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isBadRequest());
     }
 
     @Test

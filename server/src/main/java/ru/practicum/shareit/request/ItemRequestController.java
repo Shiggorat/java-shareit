@@ -8,9 +8,6 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestOutput;
 import ru.practicum.shareit.request.service.ItemRequestService;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @Slf4j
@@ -37,15 +34,15 @@ public class ItemRequestController {
 
     @GetMapping("/all")
     public List<ItemRequestOutput> getAllAnotherUsers(@RequestHeader("X-Sharer-User-Id") long requesterId,
-                                                      @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
-                                                      @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
+                                                      @RequestParam(name = "from", defaultValue = "0") int from,
+                                                      @RequestParam(name = "size", defaultValue = "10") int size) {
         log.debug("Request GET to /requests/all");
         return itemRequestService.getAllAnotherUsers(requesterId, from, size);
     }
 
     @PostMapping
     public ItemRequestOutput create(@RequestHeader("X-Sharer-User-Id") long requesterId,
-                                    @RequestBody @Valid ItemRequestDto itemRequestDto) {
+                                    @RequestBody ItemRequestDto itemRequestDto) {
         log.debug("Request POST to /requests");
         return itemRequestService.create(requesterId, itemRequestDto);
     }

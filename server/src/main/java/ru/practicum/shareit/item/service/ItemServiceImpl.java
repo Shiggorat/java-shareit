@@ -10,8 +10,9 @@ import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingMapperImpl;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidateException;
+import ru.practicum.shareit.exception.ServerException;
 import ru.practicum.shareit.item.comments.*;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Item;
@@ -171,7 +172,7 @@ public class ItemServiceImpl implements ItemService {
         List<Booking> bookings = bookingRepository.findBookingsByBooker_IdAndItem_IdAndEndIsBefore(userId,
                 itemId, LocalDateTime.now());
         if (bookings.stream().findAny().isEmpty()) {
-            throw new ValidateException("User is not booked this item");
+            throw new ServerException("User is not booked this item");
         }
 
         Comment comment = commentMapper.fromDto(commentDto, item, author);

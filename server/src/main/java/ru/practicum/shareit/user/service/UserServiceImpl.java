@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
@@ -53,9 +52,6 @@ public class UserServiceImpl implements UserService {
                 userDto.getId(), userDto.getName(), userDto.getEmail());
         if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
             throw new EmailException("Email already exists");
-        }
-        if (!isValidEmail(userDto.getEmail())) {
-            throw new ValidateException("Invalid email format");
         }
         User user = userMapper.fromDto(userDto);
         return userMapper.toDto(userRepository.save(user));

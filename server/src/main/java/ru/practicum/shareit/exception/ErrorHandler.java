@@ -12,18 +12,10 @@ import java.util.List;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler(ValidateException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(ValidateException e) {
-        log.info("400 {}", e.getMessage());
-        ErrorResponse errorResponse = new ErrorResponse("error", e.getMessage(), List.of());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
-    }
 
     @ExceptionHandler(EmailException.class)
     public ResponseEntity<ErrorResponse> handleEmailException(EmailException e) {
-        log.info("409 {}", e.getMessage());
+        log.error("409 {}", e.getMessage());
         ErrorResponse errorResponse = new ErrorResponse("error", e.getMessage(), List.of());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -40,7 +32,7 @@ public class ErrorHandler {
 
     @ExceptionHandler(NotFoundCustomException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundCustom(NotFoundCustomException e) {
-        log.info("404 {}", e.getMessage());
+        log.error("404 {}", e.getMessage());
         ErrorResponse errorResponse = new ErrorResponse("error", e.getMessage(), List.of());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -59,5 +51,12 @@ public class ErrorHandler {
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessException e) {
         ErrorResponse errorResponse = new ErrorResponse("error", "Access denied", List.of());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
+        log.error("Unexpected error: ", e);
+        ErrorResponse errorResponse = new ErrorResponse("error", "Unexpected server error", List.of(e.getMessage()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }

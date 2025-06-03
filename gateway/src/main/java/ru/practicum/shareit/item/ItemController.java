@@ -27,14 +27,14 @@ public class ItemController {
     private final ItemClient itemClient;
 
     @GetMapping
-    public ResponseEntity<Object> getAllBy(@RequestHeader("X-Sharer-User-Id") long sharerId,
+    public ResponseEntity<Object> getAllBy(@RequestHeader("X-Sharer-User-Id") @Positive long sharerId,
                                            @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                            @RequestParam(defaultValue = "100") @Positive int size) {
         return itemClient.getItems(sharerId, from, size);
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<Object> getById(@RequestHeader("X-Sharer-User-Id") long sharerId,
+    public ResponseEntity<Object> getById(@RequestHeader("X-Sharer-User-Id") @Positive long sharerId,
                                           @PathVariable long itemId) {
         log.info("Get sharerId {}, itemId={}", sharerId, itemId);
         return itemClient.getItem(sharerId, itemId);
@@ -53,27 +53,27 @@ public class ItemController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> create(@RequestHeader("X-Sharer-User-Id") long sharerId,
+    public ResponseEntity<Object> create(@RequestHeader("X-Sharer-User-Id") @Positive long sharerId,
                                          @Valid @RequestBody ItemDto itemDto) {
 
         return itemClient.createItem(sharerId, itemDto);
     }
 
     @PostMapping("{itemId}/comment")
-    public ResponseEntity<Object> createComment(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<Object> createComment(@RequestHeader("X-Sharer-User-Id") @Positive long userId,
                                                 @PathVariable long itemId,
                                                 @Valid @RequestBody CommentDto commentDto) {
         return itemClient.createComment(userId, itemId, commentDto);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Object> update(@RequestHeader("X-Sharer-User-Id") long sharerId,
+    public ResponseEntity<Object> update(@RequestHeader("X-Sharer-User-Id") @Positive long sharerId,
                                          @PathVariable long id, @RequestBody ItemDto itemDto) {
         return itemClient.patchItem(sharerId, id, itemDto);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteById(@RequestHeader("X-Sharer-User-Id") long sharerId,
+    public void deleteById(@RequestHeader("X-Sharer-User-Id") @Positive long sharerId,
                            @PathVariable long id) {
         delete("/" + id, sharerId);
     }

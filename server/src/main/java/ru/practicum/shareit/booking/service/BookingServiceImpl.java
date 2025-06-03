@@ -39,24 +39,21 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingDtoOutput create(long userId, BookingDtoInput bookingDto) {
         if (!bookingDto.getStart().isBefore(bookingDto.getEnd())) {
-            throw new ValidateException("Item is not available in this time");
+            throw new ServerException("Item is not available in this time");
         }
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() ->
                         new NotFoundException("User with id = " + userId + " is not found"));
         Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() ->
                         new NotFoundException("Item with id = " + bookingDto.getItemId() + " is not found"));
-
         Booking booking = bookingMapper.fromInputDto(bookingDto, item, user);
         if (booking.getItem().getOwner().getId() == userId) {
             throw new NotFoundException("Owner can't booking item");
         }
         if (!item.getAvailable()) {
-            throw new ValidateException("Item is is not available");
+            throw new ServerException("Item is is not available");
         }
-
         booking.setStatus(Status.WAITING);
 
         Booking newBooking = bookingRepository.save(booking);
@@ -67,7 +64,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingDtoOutput updateStatusOfBooking(long ownerId, long id, boolean approved) {
         Booking booking = bookingRepository.findById(id).orElseThrow(() ->
-                new NotFoundCustomException("Booking with this id is not found")
+                new NotFoundException("Booking with this id is not found")
         );
         userRepository.findById(ownerId)
                 .orElseThrow(() ->
@@ -85,7 +82,7 @@ public class BookingServiceImpl implements BookingService {
             status = Status.REJECTED;
         }
         if (Objects.equals(booking.getStatus(), status)) {
-            throw new ValidateException("new status is equals old status");
+            throw new EmailException("new status is equals old status");
         }
         booking.setStatus(status);
 
@@ -116,12 +113,6 @@ public List<BookingDtoOutput> getAllByOwner(long ownerId, State state, int from,
     if (!userRepository.existsById(ownerId)) {
         throw new NotFoundException("User with this id is not found");
     }
-    if (size <= 0) {
-        throw new ValidateException("size is not positive");
-    }
-    if (from < 0) {
-        throw new ValidateException("from is not positive");
-    }
     return sortByState(state, ownerId, "owner", from, size).stream().map(bookingMapper::toOutputDto)
             .collect(Collectors.toList());
 }
@@ -131,12 +122,6 @@ public List<BookingDtoOutput> getAllByOwner(long ownerId, State state, int from,
     public List<BookingDtoOutput> getAllByUser(long userId, State state, int from, int size) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User with this id is not found");
-        }
-        if (size <= 0) {
-            throw new ValidateException("size is not positive");
-        }
-        if (from < 0) {
-            throw new ValidateException("from is not positive");
         }
         return sortByState(state, userId, "user", from, size).stream().map(bookingMapper::toOutputDto)
                 .collect(Collectors.toList());
@@ -167,7 +152,7 @@ public List<BookingDtoOutput> getAllByOwner(long ownerId, State state, int from,
                 case REJECTED -> bookingRepository.findBookingsByItem_Owner_IdAndStatus(id,
                         Status.REJECTED,
                         pageable);
-                default -> throw new ValidateException("Nonexistent state");
+                default -> throw new NotFoundException("Nonexistent state");
             };
         } else {
             bookings = switch (state) {
@@ -191,7 +176,7 @@ public List<BookingDtoOutput> getAllByOwner(long ownerId, State state, int from,
                 case REJECTED -> bookingRepository.findBookingsByBooker_IdAndStatus(id,
                         Status.REJECTED,
                         pageable);
-                default -> throw new ValidateException("Nonexistent state");
+                default -> throw new NotFoundException("Nonexistent state");
             };
         }
         return bookings;

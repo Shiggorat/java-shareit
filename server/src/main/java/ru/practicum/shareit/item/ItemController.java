@@ -8,9 +8,6 @@ import ru.practicum.shareit.item.dto.ItemDtoBookingAndComments;
 import ru.practicum.shareit.item.dto.ItemDtoInput;
 import ru.practicum.shareit.item.service.ItemService;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
@@ -21,8 +18,8 @@ public class ItemController {
 
     @GetMapping
     public List<ItemDtoBookingAndComments> getAllBy(@RequestHeader("X-Sharer-User-Id") long sharerId,
-                                                    @RequestParam(defaultValue = "0") @PositiveOrZero int from,
-                                                    @RequestParam(defaultValue = "100") @Positive int size) {
+                                                    @RequestParam(defaultValue = "0") int from,
+                                                    @RequestParam(defaultValue = "100") int size) {
         return itemService.getAll(sharerId, from, size);
     }
 
@@ -34,8 +31,8 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> getByText(@RequestParam String text,
-                                   @RequestParam(defaultValue = "0") @PositiveOrZero int from,
-                                   @RequestParam(defaultValue = "100") @Positive int size) {
+                                   @RequestParam(defaultValue = "0") int from,
+                                   @RequestParam(defaultValue = "100") int size) {
         if (text.isBlank()) {
             return List.of();
         } else {
@@ -45,14 +42,14 @@ public class ItemController {
 
     @PostMapping
     public ItemDto create(@RequestHeader("X-Sharer-User-Id") long sharerId,
-                          @Valid @RequestBody ItemDtoInput itemDto) {
+                          @RequestBody ItemDtoInput itemDto) {
         return itemService.create(sharerId, itemDto);
     }
 
     @PostMapping("{itemId}/comment")
     public CommentDto createComment(@RequestHeader("X-Sharer-User-Id") long userId,
                                     @PathVariable long itemId,
-                                    @Valid @RequestBody CommentDto commentDto) {
+                                    @RequestBody CommentDto commentDto) {
         return itemService.createComment(userId, itemId, commentDto);
     }
 

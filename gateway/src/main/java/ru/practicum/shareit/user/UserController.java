@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user;
 
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -10,6 +11,7 @@ import ru.practicum.shareit.util.Update;
 
 import static org.springframework.http.RequestEntity.delete;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/users")
@@ -23,7 +25,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getById(@PathVariable long id) {
+    public ResponseEntity<Object> getById(@PathVariable @Positive long id) {
         return userClient.getUser(id);
     }
 
@@ -38,7 +40,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Object> deleteById(@PathVariable long userId) {
+    public ResponseEntity<Object> deleteById(@PathVariable @Positive long userId) {
 
         return userClient.deleteUser(userId);
     }
