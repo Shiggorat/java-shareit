@@ -13,7 +13,6 @@ import ru.practicum.shareit.booking.dto.BookingDtoInput;
 import ru.practicum.shareit.booking.dto.BookingDtoOutput;
 import ru.practicum.shareit.exception.AccessException;
 import ru.practicum.shareit.exception.EmailException;
-import ru.practicum.shareit.exception.NotFoundCustomException;
 import ru.practicum.shareit.exception.NotFoundException;
 
 import java.time.LocalDateTime;
