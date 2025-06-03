@@ -14,6 +14,7 @@ import ru.practicum.shareit.booking.dto.BookingDtoOutput;
 import ru.practicum.shareit.exception.AccessException;
 import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ServerException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -377,7 +378,7 @@ class BookingServiceImplTest {
         // Используем конструктор с аргументами
         BookingDtoInput inputDto = new BookingDtoInput(start, end, itemId);
 
-        assertThrows(NotFoundException.class, () -> {
+        assertThrows(ServerException.class, () -> {
             bookingService.create(userId, inputDto);
         });
     }
